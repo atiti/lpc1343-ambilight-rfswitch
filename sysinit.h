@@ -44,6 +44,7 @@
 #include "core/gpio/gpio.h"
 #include "core/systick/systick.h"
 
+int ser_puts(int port, const char * str);
 // Function prototypes
 void systemInit();
 

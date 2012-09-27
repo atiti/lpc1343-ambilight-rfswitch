@@ -31,8 +31,8 @@ unsigned char BulkBufOut [64];            // Buffer to store USB OUT packet
 unsigned char NotificationBuf [10];
 
 CDC_LINE_CODING CDC_LineCoding  = {CFG_USBCDC_BAUDRATE, 0, 0, 8};
-unsigned short  CDC_SerialState = 0x0000;
-unsigned short  CDC_DepInEmpty  = 1;                   // Data IN EP is empty
+unsigned short  CDC_SerialState[3] = { 0x0,0x0,0x0 };
+unsigned short  CDC_DepInEmpty[3]  = { 1,1,1 };                   // Data IN EP is empty
 
 /*----------------------------------------------------------------------------
   We need a buffer for incomming data on USB port because USB receives
@@ -59,12 +59,12 @@ typedef struct __CDC_BUF_T {
   volatile unsigned int rdIdx;
 } CDC_BUF_T;
 
-CDC_BUF_T  CDC_OutBuf;                                 // buffer for all CDC Out data
+CDC_BUF_T  CDC_OutBuf[3];                                 // buffer for all CDC Out data
 
 /*----------------------------------------------------------------------------
   read data from CDC_OutBuf
  *---------------------------------------------------------------------------*/
-int CDC_RdOutBuf (char *buffer, const int *length) {
+int CDC_RdOutBuf(int port, char *buffer, const int *length) {
   int bytesToRead, bytesRead;
   
   /* Read *length bytes, block if *bytes are not avaialable	*/
@@ -76,7 +76,7 @@ int CDC_RdOutBuf (char *buffer, const int *length) {
   // ... add code to check for underrun
 
   while (bytesToRead--) {
-    *buffer++ = CDC_BUF_RD(CDC_OutBuf);
+    *buffer++ = CDC_BUF_RD(CDC_OutBuf[port]);
   }
   return (bytesRead);  
 }
@@ -84,7 +84,7 @@ int CDC_RdOutBuf (char *buffer, const int *length) {
 /*----------------------------------------------------------------------------
   write data to CDC_OutBuf
  *---------------------------------------------------------------------------*/
-int CDC_WrOutBuf (const char *buffer, int *length) {
+int CDC_WrOutBuf (int port, const char *buffer, int *length) {
   int bytesToWrite, bytesWritten;
 
   // Write *length bytes
@@ -95,7 +95,7 @@ int CDC_WrOutBuf (const char *buffer, int *length) {
   // ... add code to check for overwrite
 
   while (bytesToWrite) {
-      CDC_BUF_WR(CDC_OutBuf, *buffer++);           // Copy Data to buffer  
+      CDC_BUF_WR(CDC_OutBuf[port], *buffer++);           // Copy Data to buffer  
       bytesToWrite--;
   }     
 
@@ -105,9 +105,9 @@ int CDC_WrOutBuf (const char *buffer, int *length) {
 /*----------------------------------------------------------------------------
   check if character(s) are available at CDC_OutBuf
  *---------------------------------------------------------------------------*/
-int CDC_OutBufAvailChar (int *availChar) {
+int CDC_OutBufAvailChar (int port, int *availChar) {
 
-  *availChar = CDC_BUF_COUNT(CDC_OutBuf);
+  *availChar = CDC_BUF_COUNT(CDC_OutBuf[port]);
 
   return (0);
 }
@@ -120,7 +120,7 @@ int CDC_OutBufAvailChar (int *availChar) {
   Parameters:   None 
   Return Value: None
  *---------------------------------------------------------------------------*/
-void CDC_Init (void) {
+void CDC_Init (int port) {
 
 //  ser_OpenPort ();
 //  ser_InitPort (CDC_LineCoding.dwDTERate,
@@ -128,16 +128,16 @@ void CDC_Init (void) {
 //                CDC_LineCoding.bParityType,
 //                CDC_LineCoding.bCharFormat);
 
-  CDC_DepInEmpty  = 1;
-  CDC_SerialState = CDC_GetSerialState();
+  CDC_DepInEmpty[port]  = 1;
+  CDC_SerialState[port] = CDC_GetSerialState(port);
 
-  CDC_BUF_RESET(CDC_OutBuf);
+  CDC_BUF_RESET(CDC_OutBuf[port]);
 
   // Initialise the CDC buffer.   This is required to buffer outgoing
   // data (MCU to PC) since data can only be sent 64 bytes per frame
   // with at least 1ms between frames.  To see how the buffer is used,
   // see 'puts' in systeminit.c
-  cdcBufferInit();
+  cdcBufferInit(port);
 }
 
 
@@ -284,7 +284,7 @@ uint32_t CDC_SendBreak (unsigned short wDurationOfBreak) {
   Parameters:   none
   Return Value: none
  *---------------------------------------------------------------------------*/
-void CDC_BulkIn(void) {
+void CDC_BulkIn(int port) {
   //int numBytesRead, numBytesAvail;
 
 //  uint8_t frame[64];
@@ -321,16 +321,27 @@ void CDC_BulkIn(void) {
   Parameters:   none
   Return Value: none
  *---------------------------------------------------------------------------*/
-void CDC_BulkOut(void) {
+void CDC_BulkOut(int port) {
   int numBytesRead;
-
+  int dep = CDC_DEP1_OUT;
+  switch(port) {
+	case CDC_SERIAL_PORT_1:
+		dep = CDC_DEP1_OUT;
+		break;
+	case CDC_SERIAL_PORT_2:
+		dep = CDC_DEP2_OUT;
+		break;
+	case CDC_SERIAL_PORT_3:
+		dep = CDC_DEP3_OUT;
+		break;
+  }
   // get data from USB into intermediate buffer
-  numBytesRead = USB_ReadEP(CDC_DEP_OUT, &BulkBufOut[0]);
+  numBytesRead = USB_ReadEP(dep, &BulkBufOut[0]);
 
   // ... add code to check for overwrite
 
   // store data in a buffer to transmit it over serial interface
-  CDC_WrOutBuf ((char *)&BulkBufOut[0], &numBytesRead);
+  CDC_WrOutBuf (port, (char *)&BulkBufOut[0], &numBytesRead);
 
 }
 
@@ -340,10 +351,10 @@ void CDC_BulkOut(void) {
   Parameters:   none
   Return Value: SerialState as defined in usbcdc11.pdf
  *---------------------------------------------------------------------------*/
-unsigned short CDC_GetSerialState (void) {
+unsigned short CDC_GetSerialState (int port) {
 //  unsigned short temp;
 
-  CDC_SerialState = 0;
+  CDC_SerialState[port] = 0;
 //  ser_LineState (&temp);
 //
 //  if (temp & 0x8000)  CDC_SerialState |= CDC_SERIAL_STATE_RX_CARRIER;
@@ -354,14 +365,14 @@ unsigned short CDC_GetSerialState (void) {
 //  if (temp & 0x0004)  CDC_SerialState |= CDC_SERIAL_STATE_PARITY;
 //  if (temp & 0x0002)  CDC_SerialState |= CDC_SERIAL_STATE_OVERRUN;
 
-  return (CDC_SerialState);
+  return (CDC_SerialState[port]);
 }
 
 
 /*----------------------------------------------------------------------------
   Send the SERIAL_STATE notification as defined in usbcdc11.pdf, 6.3.5.
  *---------------------------------------------------------------------------*/
-void CDC_NotificationIn (void) {
+void CDC_NotificationIn (int port) {
 
   NotificationBuf[0] = 0xA1;                           // bmRequestType
   NotificationBuf[1] = CDC_NOTIFICATION_SERIAL_STATE;  // bNotification (SERIAL_STATE)
@@ -371,8 +382,20 @@ void CDC_NotificationIn (void) {
   NotificationBuf[5] = 0x00;
   NotificationBuf[6] = 0x02;                           // wLength (Data length = 2 bytes, LSB first)
   NotificationBuf[7] = 0x00; 
-  NotificationBuf[8] = (CDC_SerialState >>  0) & 0xFF; // UART State Bitmap (16bits, LSB first)
-  NotificationBuf[9] = (CDC_SerialState >>  8) & 0xFF;
+  NotificationBuf[8] = (CDC_SerialState[port] >>  0) & 0xFF; // UART State Bitmap (16bits, LSB first)
+  NotificationBuf[9] = (CDC_SerialState[port] >>  8) & 0xFF;
 
-  USB_WriteEP (CDC_CEP_IN, &NotificationBuf[0], 10);   // send notification
+  int cep = CDC_CEP1_IN;
+  switch(port) {
+	case CDC_SERIAL_PORT_1:
+		cep = CDC_CEP1_IN;
+		break;
+	case CDC_SERIAL_PORT_2:
+		cep = CDC_CEP2_IN;
+		break;
+	case CDC_SERIAL_PORT_3:
+		cep = CDC_CEP3_IN;
+		break;
+  }
+  USB_WriteEP (cep, &NotificationBuf[0], 10);   // send notification
 }

@@ -151,6 +151,9 @@ void (* const USB_P_EP[USB_LOGIC_EP_NUM]) (uint32_t event) = {
   P_EP(2),
   P_EP(3),
   P_EP(4),
+  P_EP(5),
+  P_EP(6),
+  P_EP(7)
 };
 
 
@@ -166,10 +169,10 @@ void USB_EndPoint1 (uint32_t event) {
 
   switch (event) {
     case USB_EVT_IN:
-      temp = CDC_GetSerialState();
+      temp = CDC_GetSerialState(CDC_SERIAL_PORT_1);
       if (serialState != temp) {
          serialState = temp;
-         CDC_NotificationIn();            /* send SERIAL_STATE notification */
+         CDC_NotificationIn(CDC_SERIAL_PORT_1);            /* send SERIAL_STATE notification */
       }
       break;
   }
@@ -196,12 +199,87 @@ void USB_EndPoint2 (uint32_t event) {
 void USB_EndPoint3 (uint32_t event) {
   switch (event) {
     case USB_EVT_OUT:
-      CDC_BulkOut ();                /* data received from Host */
+      CDC_BulkOut (CDC_SERIAL_PORT_1);                /* data received from Host */
       break;
     case USB_EVT_IN:
-      CDC_BulkIn ();                 /* data expected from Host */
+      CDC_BulkIn (CDC_SERIAL_PORT_1);                 /* data expected from Host */
       break;
   }
 }
 
+/*
+ *  USB Endpoint 4 Event Callback
+ *   Called automatically on USB Endpoint 4 Event
+ *    Parameter:       event
+ */
+
+void USB_EndPoint4 (uint32_t event) {
+  uint16_t temp;
+  static uint16_t serialState;
+
+  switch (event) {
+    case USB_EVT_IN:
+      temp = CDC_GetSerialState(CDC_SERIAL_PORT_2);
+      if (serialState != temp) {
+         serialState = temp;
+         CDC_NotificationIn(CDC_SERIAL_PORT_2);            /* send SERIAL_STATE notification */
+      }
+      break;
+  }
+}
+
+/*
+ *  USB Endpoint 5 Event Callback
+ *   Called automatically on USB Endpoint 5 Event
+ *    Parameter:       event
+ */
+
+void USB_EndPoint5 (uint32_t event) {
+  switch (event) {
+    case USB_EVT_OUT:
+      CDC_BulkOut (CDC_SERIAL_PORT_2);                /* data received from Host */
+      break;
+    case USB_EVT_IN:
+      CDC_BulkIn (CDC_SERIAL_PORT_2);                 /* data expected from Host */
+      break;
+  }
+}
+
+/*
+ *  USB Endpoint 6 Event Callback
+ *   Called automatically on USB Endpoint 6 Event
+ *    Parameter:       event
+ */
+
+void USB_EndPoint6 (uint32_t event) {
+  uint16_t temp;
+  static uint16_t serialState;
+
+  switch (event) {
+    case USB_EVT_IN:
+      temp = CDC_GetSerialState(CDC_SERIAL_PORT_3);
+      if (serialState != temp) {
+         serialState = temp;
+         CDC_NotificationIn(CDC_SERIAL_PORT_3);            /* send SERIAL_STATE notification */
+      }
+      break;
+  }
+}
+
+/*
+ *  USB Endpoint 7 Event Callback
+ *   Called automatically on USB Endpoint 7 Event
+ *    Parameter:       event
+ */
+
+void USB_EndPoint7 (uint32_t event) {
+  switch (event) {
+    case USB_EVT_OUT:
+      CDC_BulkOut (CDC_SERIAL_PORT_3);                /* data received from Host */
+      break;
+    case USB_EVT_IN:
+      CDC_BulkIn (CDC_SERIAL_PORT_3);                 /* data expected from Host */
+      break;
+  }
+}
 

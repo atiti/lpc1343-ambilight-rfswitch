@@ -50,16 +50,16 @@
 
 #include "cdc_buf.h"
 
-static cdc_buffer_t cdcfifo;
+static cdc_buffer_t cdcfifo[3];
 
 /**************************************************************************/
 /*!
   Gets a pointer to the fifo buffer
 */
 /**************************************************************************/
-cdc_buffer_t *cdcGetBuffer()
+cdc_buffer_t *cdcGetBuffer(int port)
 {
-  return &cdcfifo;
+  return &cdcfifo[port];
 }
 
 /**************************************************************************/
@@ -67,9 +67,9 @@ cdc_buffer_t *cdcGetBuffer()
   Initialises the RX FIFO buffer
 */
 /**************************************************************************/
-void cdcBufferInit()
+void cdcBufferInit(int port)
 {
-  cdcfifo.len = 0;
+  cdcfifo[port].len = 0;
 }
 
 /**************************************************************************/
@@ -80,13 +80,13 @@ void cdcBufferInit()
   size, it will roll over to zero.
 */
 /**************************************************************************/
-uint8_t cdcBufferRead()
+uint8_t cdcBufferRead(int port)
 {
   uint8_t data;
 
-  data = cdcfifo.buf[cdcfifo.rd_ptr];
-  cdcfifo.rd_ptr = (cdcfifo.rd_ptr + 1) % CFG_USBCDC_BUFFERSIZE;
-  cdcfifo.len--;
+  data = cdcfifo[port].buf[cdcfifo[port].rd_ptr];
+  cdcfifo[port].rd_ptr = (cdcfifo[port].rd_ptr + 1) % CFG_USBCDC_BUFFERSIZE;
+  cdcfifo[port].len--;
   return data;
 }
 
@@ -95,7 +95,7 @@ uint8_t cdcBufferRead()
   Reads x bytes from cdc buffer
  */
 /**************************************************************************/
-uint32_t cdcBufferReadLen(uint8_t* buf, uint32_t len)
+uint32_t cdcBufferReadLen(int port, uint8_t* buf, uint32_t len)
 {
   uint32_t counter, actual;
   counter = actual = 0;
@@ -103,9 +103,9 @@ uint32_t cdcBufferReadLen(uint8_t* buf, uint32_t len)
   while(counter != len)
   {
     // Make sure we don't exceed buffer limits
-    if (cdcfifo.len > 0)
+    if (cdcfifo[port].len > 0)
     {
-      buf[counter] = cdcBufferRead();
+      buf[counter] = cdcBufferRead(port);
       actual++;
       counter++;
     }
@@ -126,11 +126,11 @@ uint32_t cdcBufferReadLen(uint8_t* buf, uint32_t len)
   will roll over to zero.
 */
 /**************************************************************************/
-void cdcBufferWrite(uint8_t data)
+void cdcBufferWrite(int port, uint8_t data)
 {
-  cdcfifo.buf[cdcfifo.wr_ptr] = data;
-  cdcfifo.wr_ptr = (cdcfifo.wr_ptr + 1) % CFG_USBCDC_BUFFERSIZE;
-  cdcfifo.len++;
+  cdcfifo[port].buf[cdcfifo[port].wr_ptr] = data;
+  cdcfifo[port].wr_ptr = (cdcfifo[port].wr_ptr + 1) % CFG_USBCDC_BUFFERSIZE;
+  cdcfifo[port].len++;
 }
 
 /**************************************************************************/
@@ -138,11 +138,11 @@ void cdcBufferWrite(uint8_t data)
     Clear the fifo read and write pointers and set the length to zero.
 */
 /**************************************************************************/
-void cdcBufferClearFIFO()
+void cdcBufferClearFIFO(int port)
 {
-  cdcfifo.rd_ptr = 0;
-  cdcfifo.wr_ptr = 0;
-  cdcfifo.len = 0;
+  cdcfifo[port].rd_ptr = 0;
+  cdcfifo[port].wr_ptr = 0;
+  cdcfifo[port].len = 0;
 }
 
 /**************************************************************************/
@@ -150,9 +150,9 @@ void cdcBufferClearFIFO()
     Check whether there is any data pending on the RX buffer.
 */
 /**************************************************************************/
-uint8_t cdcBufferDataPending()
+uint8_t cdcBufferDataPending(int port)
 {
-  if (cdcfifo.len != 0)
+  if (cdcfifo[port].len != 0)
   {
     return 1;
   }

@@ -214,7 +214,7 @@ typedef struct _CDC_UNION_DESCRIPTOR {
 // (usbcdc11.pdf, 5.2.3.8)
 typedef struct _CDC_UNION_1SLAVE_DESCRIPTOR {
   CDC_UNION_DESCRIPTOR sUnion;              // Union functional descriptor
-  uint8_t                 bSlaveInterfaces[1]; // Slave interface 0
+  uint8_t                 bSlaveInterfaces[1]; // Slave interface(s)
 } __attribute__((packed)) CDC_UNION_1SLAVE_DESCRIPTOR;
 
 //  Line coding structure

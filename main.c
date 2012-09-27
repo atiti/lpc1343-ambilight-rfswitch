@@ -40,31 +40,14 @@
 #include "core/systick/systick.h"
 
 #include "core/usbcdc/cdcuser.h"
-static char usbcdcBuf [32];
+static char usbcdcBuf [64];
 
-
-//#ifdef CFG_INTERFACE
-//  #include "core/cmd/cmd.h"
-//#endif
-
-/**************************************************************************/
-/*! 
-    Causes the LED to flash every second using a non-blocking delay,
-    and constantly checks if any incoming characters have arrived in
-    the UART buffer for the CLI
-
-    projectconfig.h settings:
-    --------------------------------------------------
-    CFG_INTERFACE     -> Enabled
-    CFG_PRINTF_USBCDC -> Enabled if USB is used for the CLI
-    CFG_PRINTF_UART   -> Enabled if UART is used for the CLI
-*/
 /**************************************************************************/
 int main(void)
 {
   // Configure cpu and mandatory peripherals
   systemInit();
-
+  int c = 0;
   uint32_t currentSecond, lastSecond;
   currentSecond = lastSecond = 0;
 
@@ -78,7 +61,7 @@ int main(void)
     {
       lastSecond = currentSecond;
       // Toggle the LED
-      if (gpioGetValue(CFG_LED_PORT, CFG_LED_PIN) == CFG_LED_OFF)
+/*      if (gpioGetValue(CFG_LED_PORT, CFG_LED_PIN) == CFG_LED_OFF)
       {
         gpioSetValue (CFG_LED_PORT, CFG_LED_PIN, CFG_LED_ON); 
       }
@@ -86,22 +69,54 @@ int main(void)
       {
         gpioSetValue (CFG_LED_PORT, CFG_LED_PIN, CFG_LED_OFF); 
       }
+*/
+      gpioSetValue(CFG_LED_PORT, c, CFG_LED_OFF);
+      c++;
+      if (c > 3) c = 0;
+      gpioSetValue(CFG_LED_PORT, c, CFG_LED_ON);
+      ser_puts(CDC_SERIAL_PORT_1, "hello port 1\r\n");
+      ser_puts(CDC_SERIAL_PORT_2, "hello port 2\r\n");
+      ser_puts(CDC_SERIAL_PORT_3, "hello port 3\r\n");
+
     }
 
     int  numBytesToRead, numBytesRead, numAvailByte;
 
-    CDC_OutBufAvailChar (&numAvailByte);
+    CDC_OutBufAvailChar (CDC_SERIAL_PORT_1, &numAvailByte);
+    if (numAvailByte > 0) {
+      gpioSetValue(CFG_LED_PORT, 0, CFG_LED_ON);
+      numBytesToRead = numAvailByte > 64 ? 64 : numAvailByte;
+      numBytesRead = CDC_RdOutBuf (CDC_SERIAL_PORT_1, &usbcdcBuf[0], &numBytesToRead);
+      ser_puts(CDC_SERIAL_PORT_1, usbcdcBuf);
+    }
+    CDC_OutBufAvailChar (CDC_SERIAL_PORT_2, &numAvailByte);
+    if (numAvailByte > 0) {
+      gpioSetValue(CFG_LED_PORT, 1, CFG_LED_ON);
+      numBytesToRead = numAvailByte > 64 ? 64 : numAvailByte;
+      numBytesRead = CDC_RdOutBuf (CDC_SERIAL_PORT_2, &usbcdcBuf[0], &numBytesToRead);
+      ser_puts(CDC_SERIAL_PORT_2, usbcdcBuf);
+    }
+    CDC_OutBufAvailChar (CDC_SERIAL_PORT_3, &numAvailByte);
+    if (numAvailByte > 0) {
+      gpioSetValue(CFG_LED_PORT, 2, CFG_LED_ON);
+      numBytesToRead = numAvailByte > 64 ? 64 : numAvailByte;
+      numBytesRead = CDC_RdOutBuf (CDC_SERIAL_PORT_3, &usbcdcBuf[0], &numBytesToRead);
+      ser_puts(CDC_SERIAL_PORT_3, usbcdcBuf);
+    }
+
+/*    CDC_OutBufAvailChar (CDC_SERIAL_PORT_2, &numAvailByte);
     if (numAvailByte > 0)
     {
-      numBytesToRead = numAvailByte > 32 ? 32 : numAvailByte;
-      numBytesRead = CDC_RdOutBuf (&usbcdcBuf[0], &numBytesToRead);
-      CDC_WrOutBuf(&usbcdcBuf[0], &numBytesToRead);
+      numBytesToRead = numAvailByte > 64 ? 64 : numAvailByte;
+      numBytesRead = CDC_RdOutBuf (CDC_SERIAL_PORT_2, &usbcdcBuf[0], &numBytesToRead);
+      puts(usbcdcBuf);
+      //CDC_WrOutBuf(&usbcdcBuf[0], &numBytesToRead);
       int i;
       for (i = 0; i < numBytesRead; i++)
       {
-
+*/
       // Toggle the LED
-      if (gpioGetValue(CFG_LED_PORT, CFG_LED_PIN) == CFG_LED_OFF)
+/*      if (gpioGetValue(CFG_LED_PORT, CFG_LED_PIN) == CFG_LED_OFF)
       {
         gpioSetValue (CFG_LED_PORT, CFG_LED_PIN, CFG_LED_ON);
       }
@@ -109,19 +124,10 @@ int main(void)
       {
         gpioSetValue (CFG_LED_PORT, CFG_LED_PIN, CFG_LED_OFF);
       }
-
-
-//        cmdRx(usbcdcBuf[i]);
       }
     }
+*/
 
-
-
-
-    // Poll for CLI input if CFG_INTERFACE is enabled in projectconfig.h
-//    #ifdef CFG_INTERFACE 
-//      cmdPoll(); 
-//    #endif
   }
 
   return 0;

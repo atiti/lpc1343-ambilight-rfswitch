@@ -134,9 +134,11 @@ void systemInit()
   pmuInit();                                // Configure power management
 
   // Set LED pin as output and turn LED off
-  gpioSetDir(CFG_LED_PORT, CFG_LED_PIN, 1);
-  gpioSetValue(CFG_LED_PORT, CFG_LED_PIN, CFG_LED_OFF);
-
+  int c=0;
+  for(c=0;c<4;c++) {
+	  gpioSetDir(CFG_LED_PORT, c, 1);
+	  gpioSetValue(CFG_LED_PORT, c, CFG_LED_OFF);
+  }
   // Config alt reset pin if requested (really only relevant to LPC1343 LCD Board)
   #ifdef CFG_ALTRESET
     gpioSetDir (CFG_ALTRESET_PORT, CFG_ALTRESET_PIN, gpioDirection_Input);
@@ -179,7 +181,9 @@ void systemInit()
   // Initialise USB CDC
   #ifdef CFG_USBCDC
     lastTick = systickGetTicks();   // Used to control output/printf timing
-    CDC_Init();                     // Initialise VCOM
+    CDC_Init(CDC_SERIAL_PORT_1);    // Initialise VCOM
+    CDC_Init(CDC_SERIAL_PORT_2);
+    CDC_Init(CDC_SERIAL_PORT_3);
     USB_Init();                     // USB Initialization
     USB_Connect(TRUE);              // USB Connect
     // Wait until USB is configured or timeout occurs
@@ -261,6 +265,9 @@ void __putchar(const char c)
   #endif
 }
 
+int puts(const char * str) {
+	return 0;
+}
 /**************************************************************************/
 /*! 
     @brief Sends a string to a pre-determined end point (UART, etc.).
@@ -274,27 +281,40 @@ void __putchar(const char c)
           ARM.
 */
 /**************************************************************************/
-int puts(const char * str)
+int ser_puts(int port, const char * str)
 {
   // There must be at least 1ms between USB frames (of up to 64 bytes)
   // This buffers all data and writes it out from the buffer one frame
   // and one millisecond at a time
+  int dep = CDC_DEP1_IN;
+  switch(port) {
+	case CDC_SERIAL_PORT_1:
+		dep = CDC_DEP1_IN;
+		break;
+	case CDC_SERIAL_PORT_2:
+		dep = CDC_DEP2_IN;
+		break;
+	case CDC_SERIAL_PORT_3:
+		dep = CDC_DEP3_IN;
+		break;
+  }
+
   #ifdef CFG_PRINTF_USBCDC
     if (USB_Configuration) 
     {
       while(*str)
-        cdcBufferWrite(*str++);
+        cdcBufferWrite(port, *str++);
       // Check if we can flush the buffer now or if we need to wait
       unsigned int currentTick = systickGetTicks();
       if (currentTick != lastTick)
       {
         uint8_t frame[64];
         uint32_t bytesRead = 0;
-        while (cdcBufferDataPending())
+        while (cdcBufferDataPending(port))
         {
           // Read up to 64 bytes as long as possible
-          bytesRead = cdcBufferReadLen(frame, 64);
-          USB_WriteEP (CDC_DEP_IN, frame, bytesRead);
+          bytesRead = cdcBufferReadLen(port, frame, 64);
+          USB_WriteEP (dep, frame, bytesRead);
           systickDelay(1);
         }
         lastTick = currentTick;

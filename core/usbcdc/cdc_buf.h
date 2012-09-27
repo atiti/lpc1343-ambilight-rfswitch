@@ -18,12 +18,12 @@ typedef struct _cdc_buffer_t
   uint8_t buf[CFG_USBCDC_BUFFERSIZE];
 } cdc_buffer_t;
 
-cdc_buffer_t * cdcGetBuffer();
-void           cdcBufferInit();
-uint8_t        cdcBufferRead();
-uint32_t       cdcBufferReadLen(uint8_t* buf, uint32_t len);
-void           cdcBufferWrite(uint8_t data);
-void           cdcBufferClearFIFO();
-uint8_t        cdcBufferDataPending();
+cdc_buffer_t * cdcGetBuffer(int port);
+void           cdcBufferInit(int port);
+uint8_t        cdcBufferRead(int port);
+uint32_t       cdcBufferReadLen(int port, uint8_t* buf, uint32_t len);
+void           cdcBufferWrite(int port, uint8_t data);
+void           cdcBufferClearFIFO(int port);
+uint8_t        cdcBufferDataPending(int port);
 
 #endif

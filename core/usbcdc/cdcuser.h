@@ -19,18 +19,28 @@
 #ifndef __CDCUSER_H__
 #define __CDCUSER_H__
 
+#define CDC_SERIAL_PORT_1 0
+#define CDC_SERIAL_PORT_2 1
+#define CDC_SERIAL_PORT_3 2
+
 /* CDC buffer handling */
-extern int CDC_RdOutBuf        (char *buffer, const int *length);
-extern int CDC_WrOutBuf        (const char *buffer, int *length);
-extern int CDC_OutBufAvailChar (int *availChar);
+extern int CDC_RdOutBuf        (int port, char *buffer, const int *length);
+extern int CDC_WrOutBuf        (int port, const char *buffer, int *length);
+extern int CDC_OutBufAvailChar (int port, int *availChar);
 
 
 /* CDC Data In/Out Endpoint Address */
-#define CDC_DEP_IN       0x83
-#define CDC_DEP_OUT      0x03
+#define CDC_DEP1_IN       0x83
+#define CDC_DEP1_OUT      0x03
+#define CDC_DEP2_IN	  0x85
+#define CDC_DEP2_OUT	  0x05
+#define CDC_DEP3_IN	  0x87
+#define CDC_DEP3_OUT	  0x07
 
 /* CDC Communication In Endpoint Address */
-#define CDC_CEP_IN       0x81
+#define CDC_CEP1_IN       0x81
+#define CDC_CEP2_IN	  0x84
+#define CDC_CEP3_IN	  0x86
 
 /* CDC Requests Callback Functions */
 extern uint32_t CDC_SendEncapsulatedCommand  (void);
@@ -44,20 +54,20 @@ extern uint32_t CDC_SetControlLineState      (unsigned short wControlSignalBitma
 extern uint32_t CDC_SendBreak                (unsigned short wDurationOfBreak);
 
 /* CDC Bulk Callback Functions */
-extern void CDC_BulkIn                   (void);
-extern void CDC_BulkOut                  (void);
+extern void CDC_BulkIn                   (int port);
+extern void CDC_BulkOut                  (int port);
 
 /* CDC Notification Callback Function */
-extern void CDC_NotificationIn           (void);
+extern void CDC_NotificationIn           (int port);
 
 /* CDC Initializtion Function */
-extern void CDC_Init (void);
+extern void CDC_Init (int port);
 
 /* CDC prepare the SERAIAL_STATE */
-extern unsigned short CDC_GetSerialState (void);
+extern unsigned short CDC_GetSerialState (int port);
 
 /* flow control */
-extern unsigned short CDC_DepInEmpty;         // DataEndPoint IN empty
+extern unsigned short CDC_DepInEmpty[3];         // DataEndPoint IN empty
 
 #endif  /* __CDCUSER_H__ */
 

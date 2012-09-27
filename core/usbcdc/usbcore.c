@@ -769,8 +769,13 @@ void USB_EndPoint0 (uint32_t event) {
               }
 #endif  /* USB_AUDIO */
 #if USB_CDC
-              if ((SetupPacket.wIndex.WB.L == USB_CDC_CIF_NUM)  ||       /* IF number correct? */
-                  (SetupPacket.wIndex.WB.L == USB_CDC_DIF_NUM)) {
+              if ((SetupPacket.wIndex.WB.L == USB_CDC_CIF1_NUM)  ||       /* IF number correct? */
+                  (SetupPacket.wIndex.WB.L == USB_CDC_DIF1_NUM)  ||
+		  (SetupPacket.wIndex.WB.L == USB_CDC_CIF2_NUM)  ||       /* IF number correct? */
+                  (SetupPacket.wIndex.WB.L == USB_CDC_DIF2_NUM)  ||
+		  (SetupPacket.wIndex.WB.L == USB_CDC_CIF3_NUM)  ||       /* IF number correct? */
+                  (SetupPacket.wIndex.WB.L == USB_CDC_DIF3_NUM) 
+  		) {
                 switch (SetupPacket.bRequest) {
                   case CDC_SEND_ENCAPSULATED_COMMAND:
                     EP0Data.pData = EP0Buf;                              /* data to be received, see USB_EVT_OUT */
@@ -948,8 +953,13 @@ stall_i:  USB_SetStallEP(0x80);
                     }
 #endif  /* USB_AUDIO */
 #if USB_CDC
-                    if ((SetupPacket.wIndex.WB.L == USB_CDC_CIF_NUM)  || /* IF number correct? */
-                        (SetupPacket.wIndex.WB.L == USB_CDC_DIF_NUM)) {
+                    if ((SetupPacket.wIndex.WB.L == USB_CDC_CIF1_NUM)  ||       /* IF number correct? */
+	                (SetupPacket.wIndex.WB.L == USB_CDC_DIF1_NUM)  ||
+                        (SetupPacket.wIndex.WB.L == USB_CDC_CIF2_NUM)  ||       /* IF number correct? */
+                        (SetupPacket.wIndex.WB.L == USB_CDC_DIF2_NUM)  ||
+                        (SetupPacket.wIndex.WB.L == USB_CDC_CIF3_NUM)  ||       /* IF number correct? */
+                        (SetupPacket.wIndex.WB.L == USB_CDC_DIF3_NUM) 
+		     ) {
                       switch (SetupPacket.bRequest) {
                         case CDC_SEND_ENCAPSULATED_COMMAND:
                           if (CDC_SendEncapsulatedCommand()) {

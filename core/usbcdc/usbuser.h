@@ -47,8 +47,10 @@ extern void USB_EndPoint1  (uint32_t event);
 extern void USB_EndPoint2  (uint32_t event);
 extern void USB_EndPoint3  (uint32_t event);
 extern void USB_EndPoint4  (uint32_t event);
+extern void USB_EndPoint5  (uint32_t event);
+extern void USB_EndPoint6  (uint32_t event);
+extern void USB_EndPoint7  (uint32_t event);
 
-/* USB Core Events Callback Functions */
 extern void USB_Configure_Event (void);
 extern void USB_Interface_Event (void);
 extern void USB_Feature_Event   (void);

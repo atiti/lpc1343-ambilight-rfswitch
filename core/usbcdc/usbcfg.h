@@ -54,9 +54,9 @@
 */
 
 #define USB_POWER           0
-#define USB_IF_NUM          1
-#define USB_LOGIC_EP_NUM    5
-#define USB_EP_NUM          10
+#define USB_IF_NUM          6
+#define USB_LOGIC_EP_NUM    8
+#define USB_EP_NUM          9
 #define USB_MAX_PACKET0     64
 
 /*
@@ -141,9 +141,15 @@
 #define USB_ADC_CIF_NUM     0
 #define USB_ADC_SIF1_NUM    1
 #define USB_ADC_SIF2_NUM    2
-#define USB_CDC  	        1
-#define USB_CDC_CIF_NUM     0
-#define USB_CDC_DIF_NUM     1
+#define USB_CDC  	    1
+#define USB_CDC_CIF1_NUM    0
+#define USB_CDC_DIF1_NUM    1
+#define USB_CDC_CIF2_NUM    2
+#define USB_CDC_DIF2_NUM    3
+#define USB_CDC_CIF3_NUM    4
+#define USB_CDC_DIF3_NUM    5
+#define USB_CDC_CIF_NUM	    USB_CDC_CIF1_NUM
+#define USB_CDC_DIF_NUM	    USB_CDC_DIF1_NUM
 #define USB_CDC_BUFSIZE     CFG_USBCDC_BUFSIZE
 
 /*
